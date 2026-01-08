@@ -1,0 +1,13 @@
+# secrets
+env/
+*.env
+
+# logs
+*.log
+
+# python
+__pycache__/
+*.pyc
+
+# editor
+.vscode/
