@@ -3,7 +3,10 @@ from email import message_from_bytes
 from email.header import decode_header
 import requests
 
-HOST = "haruka-a.sakura.ne.jp"
+HOST = os.environ.get("IMAP_HOST")
+if not HOST:
+    raise SystemExit("IMAP_HOST が未設定だよ（export IMAP_HOST=...）")
+
 USER = os.environ.get("IMAP_USER") or input("IMAP user: ").strip()
 PW   = os.environ.get("IMAP_PASS") or __import__("getpass").getpass("IMAP password: ")
 
