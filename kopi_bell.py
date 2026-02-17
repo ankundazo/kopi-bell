@@ -15,7 +15,9 @@ if not LINE_TOKEN:
     raise SystemExit("LINE_TOKEN が未設定だよ（export LINE_TOKEN=...）")
 
 FROM_KEYWORD = "noreply@kopichans.com"
-SUBJECT_KEYWORD = "ライブ配信が始まりました"
+LIVE_START_KEYWORD    = "ライブ配信が始まりました"
+LIVE_RESERVED_KEYWORD = "がまもなく始まります"
+
 
 def decode_mime(value: str) -> str:
     if not value:
@@ -48,7 +50,7 @@ M = imaplib.IMAP4_SSL(HOST, 993, ssl_context=ctx)
 M.login(USER, PW)
 M.select("INBOX")
 
-typ, data = M.search(None, "UNSEEN")
+typ, data = M.search(None, '(UNSEEN FROM "noreply@kopichans.com")')
 ids = data[0].split() if data and data[0] else []
 
 sent = 0
@@ -60,11 +62,18 @@ for msgid in ids:
     subj = decode_mime(msg.get("Subject", ""))
     frm  = decode_mime(msg.get("From", ""))
 
-    if (FROM_KEYWORD in frm) and (SUBJECT_KEYWORD in subj):
-        text = "\uD83D\uDD14 こぴちゃんず LIVE 開始！\n今すぐチェックだよ?\u2728"
-        line_broadcast(text)
-        sent += 1
-        M.store(msgid, "+FLAGS", "\\Seen")
+    if FROM_KEYWORD in frm:
+        if LIVE_START_KEYWORD in subj:
+            text = "\U0001F514 こぴちゃんず LIVE 開始！\n今すぐチェックだよ？\u2728"
+            line_broadcast(text)
+            sent += 1
+            M.store(msgid, "+FLAGS", "\\Seen")
+
+        elif LIVE_RESERVED_KEYWORD in subj:
+            text = "\u23F0 こぴちゃんず LIVE まもなく！\nスタンバイしよ？\u2728"
+            line_broadcast(text)
+            sent += 1
+            M.store(msgid, "+FLAGS", "\\Seen")
 
 from datetime import datetime
 print(f"{datetime.now().isoformat()} Done. sent={sent}, unseen={len(ids)}")
